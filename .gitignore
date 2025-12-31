@@ -1,5 +1,6 @@
 /env
 /archive
+/cache
 TODO
 *.wav
 .env
