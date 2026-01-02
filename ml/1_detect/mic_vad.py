@@ -3,7 +3,7 @@ import numpy as np
 from queue import Queue
 import torch
 import scipy.io.wavfile as sci_wav
-from silero_vad import load_silero_vad, read_audio
+from silero_vad import load_silero_vad
 from pathlib import Path
 
 vad_model = load_silero_vad()
