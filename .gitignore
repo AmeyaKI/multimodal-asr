@@ -1,6 +1,15 @@
+# folders
 /env
 /archive
 /cache
+/ml/5_outputs
+
+# misc files
 TODO
 *.wav
+
+# key components
 .env
+
+# un gitignore later on....
+/attria_app
