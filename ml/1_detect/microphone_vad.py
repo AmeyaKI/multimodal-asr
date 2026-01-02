@@ -19,7 +19,6 @@ MAX_SILENT_FRAMES = int(MAX_SILENCE / FRAME_DURATION)
 
 VAD_THRESHOLD = 0.5
 
-
 # start live microphone an+d recording
 def start_microphone(audio_queue: Queue, vad_model, recorded_frames: list):
     print("Recording! Start speaking.")
