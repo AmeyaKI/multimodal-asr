@@ -6,23 +6,22 @@ import scipy.io.wavfile as sci_wav
 from silero_vad import load_silero_vad, read_audio
 from pathlib import Path
 
-
+vad_model = load_silero_vad()
 class MicVAD():
     SAMPLE_RATE = 16000
     FRAME_SIZE = 512 
     VAD_THRESHOLD = 0.5
 
-    def __init__(self, vad_model, audio_queue: Queue,
-                 MAX_SILENCE=3.0):
+    def __init__(self, vad_model):
+        self.audio_queue = Queue()
         self.vad_model = vad_model
-        self.audio_queue = audio_queue
         
         self.FRAME_DURATION = self.FRAME_SIZE / self.SAMPLE_RATE
 
         self.recorded_frames = []
         
     
-    def start_microphone(self, MAX_SILENCE=3.0):
+    def start_microphone(self, MAX_SILENCE=3.0, OUTPUT_PATH='../5_outputs'):
         
         MAX_SILENT_FRAMES = int(MAX_SILENCE / self.FRAME_DURATION)
         print("Recording! Start speaking.")
@@ -57,8 +56,10 @@ class MicVAD():
                         print(f"{MAX_SILENCE} seconds of silence reached. Recording stopping.")
                         break
 
-            except KeyboardInterrupt: # stop recording manually 
+            except KeyboardInterrupt: # stop recording manually
                 print("\nStopped recording.")
+                
+        self.save_recordings(OUTPUT_PATH)
 
     # save recordings to .wav file
     def save_recordings(self, OUTPUT_PATH='../5_outputs'):
@@ -71,8 +72,5 @@ class MicVAD():
             print(f"Saved speech audio to {OUTPUT_PATH}")
         else:
             print("No speech detected. No files saved")
-
-
-
             
     
