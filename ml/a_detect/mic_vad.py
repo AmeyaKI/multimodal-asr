@@ -56,11 +56,10 @@ class MicVAD():
                     if silencio_counter >= max_silent_frames:
                         print(f"{max_silence}s of silence reached: Stopped recording.")
                         break
-
             except KeyboardInterrupt: # stop recording manually
                 print("\nKeyboard Interrupt: Stopped recording.")
                 
-        return self.save_recordings(output_path)
+        return self.convert_audio()
 
     # convert audio and transmit to ASR immediately
     def convert_audio(self):
@@ -68,11 +67,12 @@ class MicVAD():
         if self.recorded_frames:
             audio_arr = np.concatenate(self.recorded_frames).astype(np.float32) # convert recorded frames to audio array
                               
-        self.recorded_frames = [] 
+        self.recorded_frames = [] # TODO: delete all frames in instance of MicVAD ? Or don't let recorded_frames be a self var
         return audio_arr
      
-     
-    # LESS EFFICIENT: save recordings to .wav file
+
+############################################################################################################################################
+    # NOT REQ: save recordings to .wav file
     def save_recordings(self, output_path=OUTPUT_PATH):
         file_name = ''
         if self.recorded_frames:
@@ -89,5 +89,5 @@ class MicVAD():
         else:
             print("No speech detected. No files saved.")
             
-        self.recorded_frames = [] # TODO: delete all frames in instance of MicVAD ? Or don't let recorded_frames be a self var
+        self.recorded_frames = [] 
         return file_name

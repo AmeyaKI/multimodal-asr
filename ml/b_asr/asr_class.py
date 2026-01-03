@@ -6,54 +6,51 @@ from pathlib import Path
 
 class ASR():
   DEFAULT_MODEL = 'nvidia/parakeet-ctc-0.6b'
-  DEFAULT_DEVICE = 'cuda'
+  # openai/whisper-tiny.en
+  # DEFAULT_DEVICE = 'mps' # preferably 'cuda'
   TARGET_SAMPLE_RATE = 16000 # hz
-  CACHE_DIR = f'{Path.cwd()}'
+  CACHE_DIR = Path.cwd()
   
-  def __init__(self, custom_model=None, device=None):
+  def __init__(self, custom_model=None):
     self.model_name = custom_model or self.DEFAULT_MODEL
-    self.device = device or self.DEFAULT_DEVICE
+    self.device = 'mps' if torch.backends.mps.is_available() else 'cpu'
 
-    self.processor = AutoProcessor.from_pretrained(self.model_name, 
-                                                   cache_dir=self.CACHE_DIR)
+    self.processor = AutoProcessor.from_pretrained(self.model_name,
+                                                  cache_dir=self.CACHE_DIR
+                                                  )
     self.model = AutoModelForCTC.from_pretrained(self.model_name, 
-                                                 dtype='torch.float32',
-                                                 cache_dir=self.CACHE_DIR
-                                                 ).to(self.device) 
+                                                dtype=torch.float32,
+                                                cache_dir=self.CACHE_DIR
+                                                ).to(self.device) 
     self.model.eval()
 
-  def transcribe_audio_arr(self, audio_arr):
+
+  def process_arr(self, audio_arr):
+    # process audio arr
     return self.transcribe(audio_arr)
 
   def transcribe(self, waveform):
-    # calc model inputs
     model_inputs = self.processor(
         waveform,
         sampling_rate = self.TARGET_SAMPLE_RATE,
         return_tensors = 'pt'
         )
     
-    model_inputs = model_inputs.to(
-        device = self.model.device,
-        dtype = self.model.dtype
-        ) # save to device
+    model_inputs = model_inputs.to(device=self.model.device) 
         
-    with torch.no_grad(): # obtain logits
-              # model_inputs.input_features = model_inputs.input_features.to(torch.bfloat16)
-        logits = self.model(**model_inputs).logits
+    with torch.no_grad():
+      logits = self.model(**model_inputs).logits
 
     # decode and translate logits to predicted text
     predicted_ids = torch.argmax(logits, dim=-1)
-    transcription = self.processor.batch_decode(predicted_ids)
-    predicted_text = transcription[0]
+    predicted_text = self.processor.decode(predicted_ids[0],
+                                                skip_special_tokens=True)
     
     return predicted_text
-  
-  
-  
-  
-  # LESS EFFICIENT: process .wav file
-  def process_audio(self, audio_path):
+
+
+  def process_wav(self, audio_path):
+    # process .wav file
     if audio_path is None:
       raise ValueError
 
@@ -71,8 +68,8 @@ class ASR():
             target_sr = self.TARGET_SAMPLE_RATE)
     
     # # normalizing audio amp
-    # max_val = np.max(np.abs(waveform))
-    # if max_val > 0:
-    #     waveform /= max_val
+    max_val = np.max(np.abs(waveform))
+    if max_val > 0:
+        waveform /= max_val
     return waveform
           
