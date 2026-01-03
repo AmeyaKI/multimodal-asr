@@ -62,7 +62,17 @@ class MicVAD():
                 
         return self.save_recordings(output_path)
 
-    # save recordings to .wav file
+    # convert audio and transmit to ASR immediately
+    def convert_audio(self):
+        audio_arr = None
+        if self.recorded_frames:
+            audio_arr = np.concatenate(self.recorded_frames).astype(np.float32) # convert recorded frames to audio array
+                              
+        self.recorded_frames = [] 
+        return audio_arr
+     
+     
+    # LESS EFFICIENT: save recordings to .wav file
     def save_recordings(self, output_path=OUTPUT_PATH):
         file_name = ''
         if self.recorded_frames:
@@ -77,7 +87,7 @@ class MicVAD():
             print(f"Saved speech audio to {output_path}")
             
         else:
-            print("No speech detected. No files saved")
+            print("No speech detected. No files saved.")
             
-        self.recorded_frames = [] # RESOLVE LATER: delete all frames in instance of MicVAD ?
+        self.recorded_frames = [] # TODO: delete all frames in instance of MicVAD ? Or don't let recorded_frames be a self var
         return file_name
