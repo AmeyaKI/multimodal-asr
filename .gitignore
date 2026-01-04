@@ -1,18 +1,22 @@
-# folders
+# misc folders
 /env
 /archive
 /cache
-/ml/5_outputs
+*older_archive
+/ml/b_asr/asr_proofofconcept.py
+/ml/b_asr/*/
+/ml/f_outputs
 
-# misc files
+# general files to ignore
 TODO
+*__pycache__
 *.wav
 
-# key components
+# key compnoents
 .env
-
 # un gitignore later on....
 /attria_app
+
 
 
 
