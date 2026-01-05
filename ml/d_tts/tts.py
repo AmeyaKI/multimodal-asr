@@ -16,6 +16,7 @@ class TTS():
                                           dtype=torch.float32)
         
     def generate_speech(self, prompt):
+        print("Generating response")
         inputs = self.processor(
             text=[prompt],
             voice_preset='v2/en_speaker_6',
@@ -29,6 +30,7 @@ class TTS():
         def save_or_play(param='play'):
             if param == 'play':
                 sd.play(audio_data, samplerate=sampling_rate)
+                sd.wait()
             elif param == 'save':
                 wav_write("output4.wav", rate=sampling_rate, data=audio_data)
             else:
