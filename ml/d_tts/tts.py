@@ -15,7 +15,7 @@ class TTS():
         self.model = AutoModel.from_pretrained(self.model_name, 
                                           dtype=torch.float32)
         
-    def generate_audio(self, prompt):
+    def generate_speech(self, prompt):
         inputs = self.processor(
             text=[prompt],
             voice_preset='v2/en_speaker_6',
@@ -26,7 +26,7 @@ class TTS():
         audio_data = speech_values.cpu().numpy().squeeze()
         sampling_rate = self.model.generation_config.sample_rate
 
-        def save_or_play(param):
+        def save_or_play(param='play'):
             if param == 'play':
                 sd.play(audio_data, samplerate=sampling_rate)
             elif param == 'save':
