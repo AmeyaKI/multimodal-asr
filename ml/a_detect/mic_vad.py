@@ -11,7 +11,7 @@ class MicVAD():
     SAMPLE_RATE = 16000
     FRAME_SIZE = 512 
     VAD_THRESHOLD = 0.5
-    OUTPUT_PATH = f'{Path.home()}/Google Drive/My Drive/Colab Notebooks/assistant/vad_recordings' # Google Drive Desktop
+    # OUTPUT_PATH = f'{Path.home()}/Google Drive/My Drive/Colab Notebooks/assistant/vad_recordings' # Google Drive Desktop
     
     def __init__(self, vad_model):
         self.audio_queue = Queue()
@@ -22,7 +22,7 @@ class MicVAD():
         self.recorded_frames = []
         
     
-    def start_microphone(self, max_silence=3.0, output_path=OUTPUT_PATH):
+    def start_microphone(self, max_silence=2.0):
         
         max_silent_frames = int(max_silence / self.frame_duration)
         print("Recording! Start speaking.")
@@ -73,7 +73,7 @@ class MicVAD():
 
 ############################################################################################################################################
     # NOT REQ: save recordings to .wav file
-    def save_recordings(self, output_path=OUTPUT_PATH):
+    def save_recordings(self, output_path):
         file_name = ''
         if self.recorded_frames:
             # convert recorded frames to audio array

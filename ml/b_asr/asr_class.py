@@ -5,9 +5,7 @@ import librosa
 from pathlib import Path
 
 class ASR():
-  DEFAULT_MODEL = 'nvidia/parakeet-ctc-0.6b'
-  # openai/whisper-tiny.en
-  # DEFAULT_DEVICE = 'mps' # preferably 'cuda'
+  DEFAULT_MODEL = 'nvidia/parakeet-ctc-0.6b' # alt: openai/whisper-tiny.en
   TARGET_SAMPLE_RATE = 16000 # hz
   CACHE_DIR = Path.cwd()
   
@@ -67,7 +65,7 @@ class ASR():
             orig_sr = sample_rate,
             target_sr = self.TARGET_SAMPLE_RATE)
     
-    # # normalizing audio amp
+    # normalizing audio amp
     max_val = np.max(np.abs(waveform))
     if max_val > 0:
         waveform /= max_val
