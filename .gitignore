@@ -5,7 +5,7 @@
 *older_archive
 /ml/b_asr/asr_proofofconcept.py
 /ml/b_asr/*/
-/ml/f_outputs
+/ml/e_outputs
 
 # general files to ignore
 TODO
