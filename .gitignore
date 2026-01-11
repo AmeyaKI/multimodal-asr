@@ -16,6 +16,8 @@ TODO
 .env
 # un gitignore later on....
 /attria_app
+/ml/mcp-server 
+# figure out mcp server later on
 
 
 

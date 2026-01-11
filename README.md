@@ -1,10 +1,10 @@
-# multimodal-asr
+# Agentic Voice-Activated AI Assistant
+(Work in Progress)
 
-
-
-
-Datasets (tbd)
-
-
-
-People's Speech: https://huggingface.co/datasets/MLCommons/peoples_speech
+Pipeline:
+1. Mic + Voice Activation Detection
+2. ASR
+3. Agent: (integrating LangChain)
+    Standard TTS Response
+    + 
+    LLM and Applescript Agentic Command Execution
