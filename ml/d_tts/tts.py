@@ -1,39 +1,26 @@
-from transformers import pipeline, AutoProcessor, AutoModel
-import torch
+# https://docs.inworld.ai/docs/tts/tts - try 
 import sounddevice as sd
-from scipy.io.wavfile import write as wav_write
+import requests, base64, os
+from dotenv import load_dotenv
+load_dotenv()
+# Inworld AI TTS
+url = "https://api.inworld.ai/tts/v1/voice"
 
-class TTS():
-    MODEL = 'suno/bark-small'
-    DEVICE = 'mps' if torch.backends.mps.is_available() else 'cpu'
-    
-    def __init__(self, model_param=None):
-        self.model_name = model_param or self.MODEL
-        
+headers = {
+    "Authorization": f"Basic {os.getenv('INWORLD_API_KEY')}",
+    "Content-Type": "application/json"
+}
 
-        self.processor = AutoProcessor.from_pretrained(self.model_name)
-        self.model = AutoModel.from_pretrained(self.model_name, 
-                                          dtype=torch.float32)
-        
-    def generate_speech(self, prompt):
-        print("Generating response")
-        inputs = self.processor(
-            text=[prompt],
-            voice_preset='v2/en_speaker_6',
-            return_tensors='pt'
-        )
+payload = {
+    "text": "What a wonderful day to be a text-to-speech model!",
+    "voiceId": "Ashley",
+    "modelId": "inworld-tts-1"
+}
 
-        speech_values = self.model.generate(**inputs, do_sample=True)
-        audio_data = speech_values.cpu().numpy().squeeze()
-        sampling_rate = self.model.generation_config.sample_rate
+response = requests.post(url, json=payload, headers=headers)
+response.raise_for_status()
+result = response.json()
+audio_content = base64.b64decode(result['audioContent'])
 
-        def save_or_play(param='play'):
-            if param == 'play':
-                sd.play(audio_data, samplerate=sampling_rate)
-                sd.wait()
-            elif param == 'save':
-                wav_write("output4.wav", rate=sampling_rate, data=audio_data)
-            else:
-                raise ValueError
-
-        return save_or_play
+with open("output.wav", "wb") as f:
+    f.write(audio_content)
