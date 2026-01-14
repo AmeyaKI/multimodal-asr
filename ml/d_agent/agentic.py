@@ -23,7 +23,8 @@ def generate_applescript(client: genai.Client, input_command: str):
     return query(client, question, instructions)
 
 def execute_command(script): 
-    subprocess.run(["osascript", "-e", script])
+    result = subprocess.run(["osascript", "-e", script])
+    return result
     
 
 sample = ('open my mail and draft a new email that says hello how are you.' 
