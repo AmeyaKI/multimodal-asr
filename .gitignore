@@ -3,9 +3,9 @@
 /archive
 /cache
 *older_archive
-/ml/b_asr/asr_proofofconcept.py
-/ml/b_asr/*/
-/ml/e_outputs
+/ml
+*.locks
+*models*
 
 # general files to ignore
 TODO

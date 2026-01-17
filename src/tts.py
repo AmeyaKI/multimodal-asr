@@ -8,7 +8,7 @@ load_dotenv()
 from scipy.io.wavfile import write as wav_write
 
 # Inworld AI TTS
-class inw_TTS():
+class TTS():
     URL = "https://api.inworld.ai/tts/v1/voice"
     HEADERS = {
         "Authorization": f"Basic {os.getenv('INWORLD_API_KEY')}",
