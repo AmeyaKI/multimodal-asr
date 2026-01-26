@@ -14,13 +14,18 @@ from dotenv import load_dotenv
 load_dotenv()
 os.environ["GOOGLE_API_KEY"] = os.getenv('API_KEY') #  type: ignore
 
-# model = init_chat_model('google_genai:gemini-2.5-flash-lite')
+model = init_chat_model('google_genai:gemini-2.5-flash-lite')
 
-@tool
-def execute_command(script): 
-    subprocess.run(["osascript", "-e", script])
+instructions="""
+You are a natural-language-to-AppleScript translator. 
+Your output must be 100% executable AppleScript code. 
+Strict Rule: Do not include explanations, comments, or markdown code blocks.
+Strict Rule: Do not include introductory text or follow-up sentences
+Strict Rule: Include proper spacing and indentation coupled with the latest fully functional AppleScript syntax.
+"""
 
-@tool
-def speak(script):
-    ...
-    
+agent = create_agent(
+    model=model,
+    system_prompt=instructions,
+    checkpointer = InMemorySaver(),
+)

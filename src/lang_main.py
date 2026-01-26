@@ -4,7 +4,7 @@ from src.asr_class import ASR
 # from c_llm.llm import query
 # from c_llm.agentic import execute_command, generate_applescript
 from google import genai
-from src.tts import inw_TTS
+from tts import TTS
 
 import langchain
 import os
@@ -15,7 +15,7 @@ API_KEY = os.getenv('API_KEY')
 vad = load_silero_vad() # load Voice Activity Detection (VAD) model (Silero) and Mic (Sounddevice)
 micvad_model = MicVAD(vad) 
 asr_model = ASR() # load ASR (Default: Parakeet) 
-tts_model = inw_TTS() # load TTS (Default: Inworld)
+tts_model = TTS() # load TTS (Default: Inworld)
 client = genai.Client(api_key=API_KEY) # load llm (Default: Gemini)
 
 

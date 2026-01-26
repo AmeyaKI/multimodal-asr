@@ -11,7 +11,6 @@ class MicVAD():
     SAMPLE_RATE = 16000
     FRAME_SIZE = 512 
     VAD_THRESHOLD = 0.5
-    # OUTPUT_PATH = f'{Path.home()}/Google Drive/My Drive/Colab Notebooks/assistant/vad_recordings' # Google Drive Desktop
     
     def __init__(self, vad_model):
         self.audio_queue = Queue()

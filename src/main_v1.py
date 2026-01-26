@@ -1,8 +1,8 @@
 from mic_vad import MicVAD
 from silero_vad import load_silero_vad
 from asr_class import ASR
-from ..ml.d_agent.llm import query
-from ..ml.d_agent.agentic import execute_command, generate_applescript
+from llm.model import query
+from llm.agentic import execute_command, generate_applescript
 from google import genai
 from tts import TTS
 
