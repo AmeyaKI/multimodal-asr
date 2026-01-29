@@ -26,26 +26,20 @@ Strict Rule: Do not include introductory text or follow-up sentences
 Strict Rule: Include proper spacing and indentation coupled with the latest fully functional AppleScript syntax.
 """
 
-
-
-
-
-applescript_agent = create_agent(
-    model=model,
-    tools=[],
-    system_prompt=APPLESCRIPT_INSTRUCTIONS,
-    checkpointer=InMemorySaver(),
-)
 @tool
 def execute_applescript(script: str): 
     result = subprocess.run(["osascript", "-e", script])
     return result
 
-def text_to_speech(text: str):
-    try:
-        tts_model.speak(text)
-    except Exception as e:
-        return f"Speech error: {e}"
+
+applescript_agent = create_agent(
+    model=model,
+    tools=[execute_applescript],
+    system_prompt=APPLESCRIPT_INSTRUCTIONS,
+    checkpointer=InMemorySaver(),
+)
+
+
 
 ### Supervisor Agent ###
 
@@ -88,13 +82,28 @@ def execute_applescript_agent(command: str):
 
     Args:
         command (str): user command
-        
     """
     result = applescript_agent.invoke({
         "messages": [{"role": "user", "content": "command"}]
     })
     return result['messages'][-1].content
 
+@tool
+def text_to_speech(text: str):
+    """Allows the agent to speak using Inworld TTS
+
+    Args:
+        text (str): command to speak
+
+    Returns:
+        str: what the model spoke
+    """
+    try:
+        tts_model.speak(text)
+        return f"Model Spoke: {text}"
+    except Exception as e:
+        return f"Speech error: {e}"
+    
 supervisor_agent = create_agent(
     model=model,
     tools=[],
