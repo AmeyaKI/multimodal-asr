@@ -14,17 +14,26 @@ API_KEY = os.getenv('API_KEY')
 
 vad = load_silero_vad() # load Voice Activity Detection (VAD) model (Silero) and Mic (Sounddevice)
 micvad_model = MicVAD(vad) 
-asr_model = ASR() # load ASR (Default: Parakeet) 
-tts_model = TTS() # load TTS (Default: Inworld)
-client = genai.Client(api_key=API_KEY) # load llm (Default: Gemini)
+asr_model = ASR() # load ASR (Default: Parakeet)  
+# tts_model = TTS() # load TTS (Default: Inworld) --- loaded in agent
+# client = genai.Client(api_key=API_KEY) # load llm (Default: Gemini) -- loaded in agent
 
 
 
 user_audio_arr = micvad_model.start_microphone() # runs microphone, saves recordings, returns file number        
 user_speech_to_text = asr_model.process_arr(user_audio_arr) # translates audio arr to text
 
-
-# Implement LangChain
+# pass TTS into 
+# LangChain
+# Feed a Supervisor Agent:
+    # 1. Answer the question
+        # by first responding with a quick "on it", "of course", subtle response to indicate acknowledgement of user query
+        # then call applescript agent
+        
+        
+        
+        
+        ###### # if you alrady know the answer, give a sentence response. ie. if query is What is teh capital of the US... you say it
 
 """
 PIPE
