@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="conf">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/env/lib/python3.12/site-packages/hydra/test_utils/configs/conf.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
