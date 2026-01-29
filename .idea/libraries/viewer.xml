@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="viewer">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/env/lib/python3.12/site-packages/trimesh/resources/templates/viewer.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

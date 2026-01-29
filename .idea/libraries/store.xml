@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="store">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/env/lib/python3.12/site-packages/zarr/tests/data/store.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
