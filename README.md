@@ -6,7 +6,8 @@ Pipeline (TLDR):
     - Local microphone
 2. Speech-to-Text: Automatic Speech Recognition (ASR)
     - Nvidia Parakeet (0.5b)
-3. Agent: (integrating LangChain)
+3. Agent: (LangChain)
+    - Dual Agent workflow (Supervisor and Executor Agents)
     - Text-to-Speech: Inworld TTS
     - Agentic Capabilities: LLM and Applescript Agentic Command Execution
        - LLM: Gemini 2.5 flash lite (faster, free api)

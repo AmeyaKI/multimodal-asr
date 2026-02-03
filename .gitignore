@@ -6,7 +6,7 @@
 /ml
 *.locks
 *models*
-.id
+.idea
 
 # general files to ignore
 TODO
