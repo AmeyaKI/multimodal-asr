@@ -1,0 +1,37 @@
+scenarios:
+  - id: E1
+    utterance: "Create event Team Standup on 2026-05-22 10:00 for 30 minutes"
+    intent: calendar
+    expect_tool: create_event
+    expect_title: Team Standup
+
+  - id: E2
+    utterance: "Draft email to test@example.com subject Hello body Hi there"
+    intent: mail
+    expect_tools:
+      - mail_compose
+      - mail_set_subject
+
+  - id: E3
+    utterance: "Create document Project Notes and write Introduction paragraph"
+    intent: docs
+    expect_tools:
+      - doc_create_markdown
+      - doc_append_text
+
+  - id: E4
+    utterance: "Send the email"
+    intent: mail
+    slots:
+      action: send
+    expect_blocked: true
+
+  - id: E5
+    utterance: "Create event Lunch on 2026-05-22 12:00 for one hour and create document Lunch Notes and write Menu"
+    intent: compound
+    min_steps: 2
+
+  - id: E6
+    utterance: "barge-in test"
+    intent: chat
+    note: manual barge-in during TTS
