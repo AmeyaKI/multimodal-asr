@@ -12,35 +12,43 @@ from jarvis.config import get_settings
 
 def cli() -> None:
     parser = argparse.ArgumentParser(prog="jarvis", description="Jarvis macOS voice assistant")
-    sub = parser.add_subparsers(dest="command")
+    sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("health", help="Check Ollama and permissions")
     sub.add_parser("run", help="Start voice assistant (HUD + pipeline)")
-    sub.add_parser("text", help="Process a single text command")
+    sub.add_parser("mcp", help="Start MCP server (stdio)")
 
-    p_text = sub.add_parser("text-cmd", help="Run one text command")
-    p_text.add_argument("utterance", nargs="+", help="Command text")
+    p_text = sub.add_parser("text", help="Process a single text command")
+    p_text.add_argument(
+        "utterance",
+        nargs="*",
+        help="Command text (quote the whole phrase). Omit to type at prompt.",
+    )
 
     args = parser.parse_args()
+
     if args.command == "health":
         sys.exit(run_health())
     if args.command == "run":
         asyncio.run(run_assistant())
-    elif args.command == "text" or args.command == "text-cmd":
-        utterance = " ".join(getattr(args, "utterance", []) or [])
-        if not utterance and args.command == "text":
-            utterance = input("Command: ").strip()
-        asyncio.run(run_text_command(utterance))
-    mcp_parser = sub.add_parser("mcp", help="Start MCP server (stdio)")
-    mcp_parser.set_defaults(command="mcp")
-
+        return
     if args.command == "mcp":
         from jarvis.mcp.server import serve
 
         serve()
-    else:
-        parser.print_help()
-        sys.exit(0)
+        return
+    if args.command == "text":
+        utterance = " ".join(args.utterance).strip()
+        if not utterance:
+            utterance = input("Command: ").strip()
+        if not utterance:
+            print("No command provided.", file=sys.stderr)
+            sys.exit(1)
+        asyncio.run(run_text_command(utterance))
+        return
+
+    parser.print_help()
+    sys.exit(0)
 
 
 def run_health() -> int:
@@ -50,11 +58,9 @@ def run_health() -> int:
     print("Jarvis health check")
     print("-" * 40)
 
-    # Data dir
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     print(f"[OK] Data dir: {settings.data_dir}")
 
-    # Ollama
     try:
         import httpx
 
@@ -74,14 +80,16 @@ def run_health() -> int:
         print("       Install: https://ollama.com — then: ollama pull llama3.2:3b")
         ok = False
 
-    # Permissions reminder
+    from jarvis.tools.calendar_eventkit import _host_app_hint
+
+    host = _host_app_hint()
     print("[INFO] macOS permissions required:")
     print("       - Microphone (voice input)")
+    print(f"       - Calendars: enable '{host}' (the app running Python, not only VS Code)")
     print("       - Automation: Mail, Calendar, Notes, System Events")
     print("       - Accessibility (UI automation fallback)")
     print("       Run: scripts/setup_macos_permissions.sh")
 
-    # SQLite
     from jarvis.memory.store import MemoryStore
 
     store = MemoryStore(settings.db_path)
@@ -99,10 +107,9 @@ def run_health() -> int:
 async def run_text_command(utterance: str) -> None:
     from jarvis.core.events import get_bus
     from jarvis.core.orchestrator import run_orchestrator
-
-    settings = get_settings()
     from jarvis.memory.store import MemoryStore
 
+    settings = get_settings()
     store = MemoryStore(settings.db_path)
     session_id = store.new_session()
     bus = get_bus()

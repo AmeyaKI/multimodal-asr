@@ -51,13 +51,18 @@ JARVIS_EVAL_MOCK=1 python -m jarvis.eval.run_eval
 
 ## Environment
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama API |
-| `OLLAMA_MODEL` | `llama3.2:3b` | Router model |
-| `JARVIS_EVAL_MOCK` | `0` | Mock tools for tests |
-| `JARVIS_LLM_FALLBACK` | `none` | Set `gemini` + `GEMINI_API_KEY` for cloud |
-| `REQUIRE_CONFIRM_SEND` | `true` | Block email send without HUD confirm |
+
+| Variable               | Default                  | Description                               |
+| ---------------------- | ------------------------ | ----------------------------------------- |
+| `OLLAMA_BASE_URL`      | `http://127.0.0.1:11434` | Ollama API                                |
+| `OLLAMA_MODEL`         | `llama3.2:3b`            | Router model                              |
+| `JARVIS_EVAL_MOCK`     | `0`                      | Mock tools for tests                      |
+| `JARVIS_LLM_FALLBACK`  | `none`                   | Set `gemini` + `GEMINI_API_KEY` for cloud |
+| `REQUIRE_CONFIRM_SEND` | `true`                   | Block email send without HUD confirm      |
+| `SHOW_ACTIONS_VISUALLY` | `true`                  | Open Calendar/Mail/TextEdit in foreground |
+| `VISIBLE_TYPING_DELAY_MS` | `35`                  | Keystroke delay for visible typing        |
+| `STEP_PAUSE_SEC` | `0.5`                          | Pause between automation steps            |
+
 
 ## Virtual environment
 
@@ -67,6 +72,7 @@ All dependencies install into `.venv/` (gitignored). Locked versions: `requireme
 source .venv/bin/activate
 python -m jarvis.main run      # voice + HUD
 python -m jarvis.main text "Create event Team Standup on 2026-05-22 10:00 for 30 minutes"
+# Quote the full phrase so the shell passes it as one argument
 JARVIS_EVAL_MOCK=1 python -m jarvis.eval.run_eval
 ```
 

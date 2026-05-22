@@ -47,6 +47,10 @@ def execute_tool(name: str, args: dict[str, Any], confirm_token: str | None = No
         out = fn(**args)
         if isinstance(out, dict) and "ok" not in out:
             out["ok"] = True
+        if out.get("ok"):
+            from jarvis.tools.visibility import reveal_for_tool
+
+            reveal_for_tool(name, out, args)
         return out
     except TypeError as e:
         return {"ok": False, "error": str(e)}

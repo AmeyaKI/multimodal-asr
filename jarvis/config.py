@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     require_confirm_send: bool = True
     hud_enabled: bool = True
 
+    # Visible automation (open apps, show calendar/mail/docs in foreground)
+    show_actions_visually: bool = True
+    visible_typing_delay_ms: int = 35
+    step_pause_sec: float = 0.5
+
     # Paths (project-local data dir; override with JARVIS_DATA_DIR)
     data_dir: Path = Field(
         default_factory=lambda: Path.cwd() / ".jarvis-data"

@@ -23,14 +23,13 @@ async def build_plan(transcript: str, intent: str, slots: dict[str, Any]) -> lis
     if intent == "chat":
         return []
 
-    # Rule-based fast paths for eval reliability (always try for compound/multi-domain)
-    rule_plan = _rule_plan(transcript, intent, slots)
-    if rule_plan:
+    # Rule-based fast paths (compound always uses full multi-domain plan)
+    plan_intent = "compound" if intent == "compound" else intent
+    rule_plan = _rule_plan(transcript, plan_intent, slots)
+    if intent == "compound" and rule_plan:
         return rule_plan
-    if intent == "compound":
-        rule_plan = _rule_plan(transcript, "compound", slots)
-        if rule_plan:
-            return rule_plan
+    if rule_plan and intent != "compound":
+        return rule_plan
 
     settings = get_settings()
     result = await ainvoke_json(

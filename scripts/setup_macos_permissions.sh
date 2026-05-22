@@ -19,7 +19,11 @@ sleep 1
 open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility" 2>/dev/null || true
 
 echo ""
-echo "Grant access to Terminal (or your IDE) and enable:"
-echo "  - Mail, Calendar, Notes, System Events"
+echo "Grant access to the app that RUNS Python (check with: echo \$TERM_PROGRAM):"
+echo "  - Calendars: enable Cursor, Terminal, or Visual Studio Code (whichever you use)"
+echo "  - Automation: Mail, Calendar, Notes, System Events"
+echo ""
+echo "Note: Enabling Calendars only for VS Code does NOT help if you run"
+echo "      'python -m jarvis.main' from Cursor's terminal."
 echo ""
 echo "Then run: jarvis health"

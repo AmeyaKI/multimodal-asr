@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from datetime import datetime
 from typing import Any
 
@@ -15,25 +16,94 @@ def _use_mock() -> bool:
     return get_settings().jarvis_eval_mock
 
 
+def _host_app_hint() -> str:
+    """Name of the process macOS ties to Calendar permission."""
+    import os
+    import sys
+
+    for key in ("TERM_PROGRAM", "CURSOR_TRACE_ID"):
+        if os.environ.get(key):
+            if key == "TERM_PROGRAM":
+                return os.environ["TERM_PROGRAM"]  # Cursor, vscode, Apple_Terminal
+            return "Cursor"
+    exe = sys.executable
+    if "Cursor" in exe:
+        return "Cursor"
+    if "Code" in exe:
+        return "Visual Studio Code"
+    return "Terminal (or Cursor)"
+
+
+def _request_calendar_access(store) -> bool:
+    """Request EventKit access and wait for the async completion handler."""
+    from EventKit import EKEntityTypeEvent
+
+    done = threading.Event()
+    result = {"granted": False, "error": None}
+
+    def handler(granted_flag, error):
+        result["granted"] = bool(granted_flag)
+        result["error"] = error
+        done.set()
+
+    # Prefer full access API on recent macOS
+    if hasattr(store, "requestFullAccessToEventsWithCompletion_"):
+        store.requestFullAccessToEventsWithCompletion_(handler)
+    else:
+        store.requestAccessToEntityType_completion_(EKEntityTypeEvent, handler)
+
+    done.wait(timeout=60.0)
+    return result["granted"]
+
+
+def _ensure_calendar_access() -> None:
+    from EventKit import (
+        EKAuthorizationStatusAuthorized,
+        EKAuthorizationStatusFullAccess,
+        EKAuthorizationStatusNotDetermined,
+        EKAuthorizationStatusWriteOnly,
+        EKEntityTypeEvent,
+        EKEventStore,
+    )
+
+    status = EKEventStore.authorizationStatusForEntityType_(EKEntityTypeEvent)
+    authorized = {
+        EKAuthorizationStatusAuthorized,
+        EKAuthorizationStatusFullAccess,
+        EKAuthorizationStatusWriteOnly,
+    }
+    if status in authorized:
+        return
+
+    store = EKEventStore.alloc().init()
+    if status == EKAuthorizationStatusNotDetermined:
+        if _request_calendar_access(store):
+            return
+    else:
+        # Denied or restricted — try request once more in case user just toggled Settings
+        if _request_calendar_access(store):
+            return
+
+    app = _host_app_hint()
+    raise PermissionError(
+        f"Calendar access denied for the app running Python ({app}), not VS Code "
+        f"unless you run the command from VS Code's terminal. "
+        f"Enable System Settings → Privacy & Security → Calendars → {app}. "
+        f"Then quit and reopen that app and retry."
+    )
+
+
 def _get_store():
     global _store
     if _use_mock():
         return None
     if _store is not None:
         return _store
-    from EventKit import EKEntityTypeEvent, EKEventStore
+    _ensure_calendar_access()
+    from EventKit import EKEventStore
 
-    store = EKEventStore.alloc().init()
-    granted = [False]
-
-    def handler(granted_flag, error):
-        granted[0] = granted_flag
-
-    store.requestAccessToEntityType_completion_(EKEntityTypeEvent, handler)
-    if not granted[0]:
-        raise PermissionError("Calendar access denied. Grant in System Settings.")
-    _store = store
-    return store
+    _store = EKEventStore.alloc().init()
+    return _store
 
 
 def list_calendars() -> list[dict[str, str]]:
@@ -78,6 +148,10 @@ def create_event(
         dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
         return NSDate.dateWithTimeIntervalSince1970_(dt.timestamp())
 
+    from jarvis.tools.visibility import calendar_open_at_date
+
+    calendar_open_at_date(start_iso)
+
     store = _get_store()
     event = EKEvent.eventWithEventStore_(store)
     event.setTitle_(title)
@@ -88,20 +162,36 @@ def create_event(
     if location:
         event.setLocation_(location)
 
+    calendar_set = False
     if calendar_id:
         for cal in store.calendarsForEntityType_(EKEntityTypeEvent) or []:
             if str(cal.calendarIdentifier()) == calendar_id:
                 event.setCalendar_(cal)
+                calendar_set = True
                 break
-    else:
+    if not calendar_set:
         default = store.defaultCalendarForNewEvents()
         if default:
             event.setCalendar_(default)
+            calendar_set = True
+        else:
+            # Fallback: first writable calendar (common when default is unset)
+            for cal in store.calendarsForEntityType_(EKEntityTypeEvent) or []:
+                if cal.allowsContentModifications():
+                    event.setCalendar_(cal)
+                    calendar_set = True
+                    break
+    if not calendar_set:
+        return {
+            "ok": False,
+            "error": "No writable calendar found. Add a calendar in Calendar.app.",
+        }
 
-    err = [None]
-    ok = store.saveEvent_span_error_(event, 0, err)  # EKSpanThisEvent = 0
+    # PyObjC: error out-param must be None or objc.NULL (not a Python list)
+    ok, error = store.saveEvent_span_error_(event, 0, None)  # EKSpanThisEvent = 0
     if not ok:
-        return {"ok": False, "error": str(err[0]) if err[0] else "save failed"}
+        err_msg = str(error) if error else "save failed"
+        return {"ok": False, "error": err_msg}
 
     eid = str(event.eventIdentifier())
     return {
@@ -133,7 +223,9 @@ def get_event(event_id: str) -> dict[str, Any]:
                     "ok": True,
                     "event_id": event_id,
                     "title": str(item.title()),
-                    "start_iso": datetime.fromtimestamp(start.timeIntervalSince1970()).isoformat(),
+                    "start_iso": datetime.fromtimestamp(
+                        start.timeIntervalSince1970()
+                    ).isoformat(),
                 }
     return {"ok": False, "error": "event not found"}
 
@@ -142,5 +234,4 @@ def delete_event(event_id: str) -> dict[str, Any]:
     if _use_mock():
         _mock_events.pop(event_id, None)
         return {"ok": True}
-    # Simplified: would need fetch by id
     return {"ok": False, "error": "delete not implemented for live EventKit in v0.1"}

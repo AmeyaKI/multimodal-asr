@@ -48,11 +48,16 @@ def mail_compose() -> dict[str, Any]:
     script = '''
     tell application "Mail"
         activate
+        delay 0.3
         set newMsg to make new outgoing message with properties {visible:true}
     end tell
-    delay 0.5
+    delay 0.8
     '''
     r = run_applescript(script)
+    if r["ok"]:
+        from jarvis.tools.visibility import mail_show_compose_window
+
+        mail_show_compose_window()
     return {"ok": r["ok"], "error": r.get("stderr")}
 
 
@@ -76,6 +81,30 @@ def mail_set_subject(subject: str) -> dict[str, Any]:
     if _use_mock():
         _mock_draft["subject"] = subject
         return {"ok": True}
+    from jarvis.config import get_settings
+    from jarvis.tools.visibility import mail_show_compose_window
+
+    mail_show_compose_window()
+    if get_settings().show_actions_visually and len(subject) <= 80:
+        # Tab to subject field then type visibly (Mail compose: To -> Tab -> Subject)
+        esc = subject.replace("\\", "\\\\").replace('"', '\\"')
+        script = f'''
+        tell application "Mail" to activate
+        delay 0.3
+        tell application "System Events"
+            tell process "Mail"
+                set frontmost to true
+                keystroke tab
+                delay 0.15
+                keystroke tab
+                delay 0.15
+                keystroke "{esc}"
+            end tell
+        end tell
+        '''
+        r = run_applescript(script, timeout=60.0)
+        if r["ok"]:
+            return r
     esc = subject.replace("\\", "\\\\").replace('"', '\\"')
     script = f'''
     tell application "Mail"
@@ -83,6 +112,7 @@ def mail_set_subject(subject: str) -> dict[str, Any]:
         set theMsg to item 1 of (every outgoing message whose visible is true)
         set subject of theMsg to "{esc}"
     end tell
+    delay 0.3
     '''
     return run_applescript(script)
 
@@ -91,6 +121,30 @@ def mail_set_body(body: str, visible_type: bool = True) -> dict[str, Any]:
     if _use_mock():
         _mock_draft["body"] = body
         return {"ok": True}
+    from jarvis.config import get_settings
+    from jarvis.tools.visibility import mail_show_compose_window, type_text_visible
+
+    mail_show_compose_window()
+    if get_settings().show_actions_visually and visible_type and len(body) <= 200:
+        mail_show_compose_window()
+        # Click into body: tab past To and Subject
+        run_applescript(
+            '''
+            tell application "Mail" to activate
+            tell application "System Events"
+                tell process "Mail"
+                    keystroke tab
+                    delay 0.1
+                    keystroke tab
+                    delay 0.1
+                    keystroke tab
+                    delay 0.2
+                end tell
+            end tell
+            ''',
+            timeout=30.0,
+        )
+        return type_text_visible("Mail", body)
     esc = body.replace("\\", "\\\\").replace('"', '\\"')
     if visible_type and len(body) < 150:
         script = f'''

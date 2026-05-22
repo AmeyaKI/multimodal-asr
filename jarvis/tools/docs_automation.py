@@ -19,7 +19,9 @@ def doc_create_markdown(title: str, subdir: str | None = None) -> dict[str, Any]
     safe = "".join(c if c.isalnum() or c in " -_" else "_" for c in title).strip()
     path = base / f"{safe}.md"
     path.write_text(f"# {title}\n\n", encoding="utf-8")
-    run_applescript(f'tell application "TextEdit" to open POSIX file "{path}"')
+    from jarvis.tools.visibility import doc_show_and_type
+
+    doc_show_and_type(str(path), "")
     return {"ok": True, "path": str(path), "title": title}
 
 
@@ -27,15 +29,22 @@ def doc_append_text(path: str, text: str, visible: bool = True) -> dict[str, Any
     p = Path(path).expanduser()
     if not p.exists():
         return {"ok": False, "error": f"file not found: {path}"}
-    content = p.read_text(encoding="utf-8")
-    p.write_text(content + text + "\n", encoding="utf-8")
     if visible:
-        run_applescript(f'''
-        tell application "TextEdit"
-            activate
-            open POSIX file "{p}"
-        end tell
-        ''')
+        from jarvis.config import get_settings
+        from jarvis.tools.visibility import doc_show_and_type
+
+        if get_settings().show_actions_visually:
+            # Type new text visibly; persist after
+            doc_show_and_type(str(p), text, append=True)
+            content = p.read_text(encoding="utf-8")
+            if text not in content:
+                p.write_text(content + text + "\n", encoding="utf-8")
+        else:
+            content = p.read_text(encoding="utf-8")
+            p.write_text(content + text + "\n", encoding="utf-8")
+    else:
+        content = p.read_text(encoding="utf-8")
+        p.write_text(content + text + "\n", encoding="utf-8")
     return {"ok": True, "path": str(p), "appended_len": len(text)}
 
 

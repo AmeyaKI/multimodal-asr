@@ -21,6 +21,9 @@ Use ISO-8601 dates when possible (2026-05-22T15:00:00)."""
 
 
 async def route_intent(transcript: str) -> dict[str, Any]:
+    rule = _rule_route(transcript)
+    if rule.get("intent") == "compound":
+        return rule
     settings = get_settings()
     result = await ainvoke_json(
         f'User said: "{transcript}"',
@@ -28,7 +31,10 @@ async def route_intent(transcript: str) -> dict[str, Any]:
         model=settings.ollama_model,
     )
     if not result.get("intent"):
-        result = _rule_route(transcript)
+        return rule
+    # Prefer rule-based compound if LLM missed it
+    if rule.get("intent") == "compound":
+        return rule
     return result
 
 
