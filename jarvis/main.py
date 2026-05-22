@@ -30,7 +30,9 @@ def cli() -> None:
     if args.command == "health":
         sys.exit(run_health())
     if args.command == "run":
-        asyncio.run(run_assistant())
+        from jarvis.runtime import run_assistant
+
+        run_assistant()
         return
     if args.command == "mcp":
         from jarvis.mcp.server import serve
@@ -115,13 +117,6 @@ async def run_text_command(utterance: str) -> None:
     bus = get_bus()
     result = await run_orchestrator(utterance, session_id=session_id, bus=bus)
     print(result.get("response_text", result.get("error", result)))
-
-
-async def run_assistant() -> None:
-    from jarvis.runtime import AssistantRuntime
-
-    runtime = AssistantRuntime()
-    await runtime.start()
 
 
 if __name__ == "__main__":

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
+import threading
 
 import rumps
+from PyObjCTools.AppHelper import callAfter
 
 from jarvis.core.events import Event, EventType, get_bus
 
@@ -57,19 +58,26 @@ class JarvisHUD(rumps.App):
 _hud_app: JarvisHUD | None = None
 
 
-def _sync_listener(event: Event) -> None:
-    global _hud_app
+def _apply_hud_update(event: Event) -> None:
     if _hud_app:
         _hud_app.update_from_event(event)
 
 
-def run_hud_thread() -> None:
+def _enqueue_hud_update(event: Event) -> None:
+    """Marshal HUD mutations onto the AppKit main thread."""
+    if threading.current_thread() is threading.main_thread():
+        _apply_hud_update(event)
+    else:
+        callAfter(_apply_hud_update, event)
+
+
+def run_hud() -> None:
+    """Run the menu bar HUD on the main thread (required by AppKit). Blocks until quit."""
     global _hud_app
     bus = get_bus()
 
-    def listener(event: Event):
-        if _hud_app:
-            _hud_app.update_from_event(event)
+    def listener(event: Event) -> None:
+        _enqueue_hud_update(event)
 
     for et in EventType:
         bus.subscribe(et, listener)

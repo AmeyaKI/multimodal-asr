@@ -1,8 +1,6 @@
-"""Audio → VAD → ASR perception pipeline."""
+"""Audio → hold-to-talk → ASR perception pipeline."""
 
 from __future__ import annotations
-
-import asyncio
 
 from jarvis.config import get_settings
 from jarvis.core.events import Event, EventBus, EventType, get_bus
@@ -16,42 +14,42 @@ class PerceptionPipeline:
     def __init__(self, bus: EventBus | None = None) -> None:
         self.bus = bus or get_bus()
         self.vad = VADStream()
-        self.wake = WakeListener(on_activate=self._on_wake)
+        self.wake = WakeListener()
         self._running = False
-        self._barge_in = asyncio.Event()
-
-    def _on_wake(self) -> None:
-        self._barge_in.set()
-
-    def request_barge_in(self) -> None:
-        self._barge_in.set()
 
     async def run_loop(self, on_final_transcript) -> None:
-        """Hold hotkey → capture → transcribe → callback."""
+        """Hold hotkey → capture until release → transcribe → callback."""
+        settings = get_settings()
+        hotkey = settings.wake_hotkey.capitalize()
         self.wake.start()
         self._running = True
-        settings = get_settings()
 
         while self._running:
             await self.bus.publish(
                 Event(EventType.STATE_CHANGED, {"state": "idle"})
             )
-            await self.wake.wait_for_activation()
-            await self.bus.publish(
-                Event(EventType.LISTENING, {"state": "listening"})
-            )
+            await self.wake.wait_for_press()
+
+            await self.bus.publish(Event(EventType.LISTENING, {}))
             await self.bus.publish(
                 Event(EventType.STATE_CHANGED, {"state": "listening"})
             )
+            print(f"\nListening… (release {hotkey} when done)", flush=True)
 
-            self.vad.set_speech_callback(lambda: self.request_barge_in())
-            audio = await self.vad.capture_utterance()
+            audio = await self.vad.capture_while_held(lambda: self.wake.is_held)
+
+            await self.bus.publish(
+                Event(EventType.STATE_CHANGED, {"state": "idle"})
+            )
+
             if audio is None:
                 continue
 
+            print("Transcribing…", flush=True)
             await self.bus.publish(
                 Event(EventType.TRANSCRIPT_PARTIAL, {"text": "..."})
             )
+
             if settings.asr_backend == "parakeet":
                 text = transcribe_parakeet(audio)
                 result = {"text": text}
@@ -60,8 +58,10 @@ class PerceptionPipeline:
 
             text = result.get("text", "").strip()
             if not text:
+                print("(no speech detected)\n", flush=True)
                 continue
 
+            print(f"You: {text}", flush=True)
             await self.bus.publish(
                 Event(EventType.TRANSCRIPT_FINAL, {"text": text})
             )

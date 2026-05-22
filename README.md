@@ -36,7 +36,8 @@ python -m jarvis.main health
 ## Usage
 
 ```bash
-# Voice assistant (HUD + hold Option to talk)
+# Voice assistant (HUD + hold Option to talk, release to stop)
+# Terminal shows transcript; Jarvis speaks the reply and runs the command.
 python -m jarvis.main run
 
 # Single text command

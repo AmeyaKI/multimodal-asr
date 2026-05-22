@@ -35,12 +35,22 @@ class EventBus:
     def __init__(self) -> None:
         self._listeners: dict[EventType, list[Listener]] = {}
         self._confirm_queue: asyncio.Queue[str | None] = asyncio.Queue()
+        self._loop: asyncio.AbstractEventLoop | None = None
         self.ui_state: str = "idle"
         self.last_transcript: str = ""
         self.current_step: str = ""
 
     def subscribe(self, event_type: EventType, listener: Listener) -> None:
         self._listeners.setdefault(event_type, []).append(listener)
+
+    def set_loop(self, loop: asyncio.AbstractEventLoop) -> None:
+        self._loop = loop
+
+    def _enqueue_confirm(self, value: str | None) -> None:
+        if self._loop is not None and self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._confirm_queue.put_nowait, value)
+        else:
+            self._confirm_queue.put_nowait(value)
 
     async def publish(self, event: Event) -> None:
         if event.type == EventType.TRANSCRIPT_FINAL:
@@ -64,10 +74,10 @@ class EventBus:
             return False
 
     def submit_confirm(self, token: str) -> None:
-        self._confirm_queue.put_nowait(token)
+        self._enqueue_confirm(token)
 
     def submit_cancel(self) -> None:
-        self._confirm_queue.put_nowait(None)
+        self._enqueue_confirm(None)
 
 
 # Global bus for single-process app

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from queue import Queue
+from queue import Empty, Queue
 from typing import Callable
 
 import numpy as np
@@ -74,6 +74,53 @@ class VADStream:
         if not self._recorded:
             return None
         return np.concatenate(self._recorded).astype(np.float32)
+
+    async def capture_while_held(self, is_held: Callable[[], bool]) -> np.ndarray | None:
+        """Record microphone audio until `is_held()` returns False (e.g. hotkey released)."""
+        import asyncio
+
+        self._recorded = []
+        while not self._queue.empty():
+            try:
+                self._queue.get_nowait()
+            except Empty:
+                break
+
+        capture_error: list[BaseException] = []
+
+        def run_capture() -> None:
+            try:
+                with sd.InputStream(
+                    samplerate=SAMPLE_RATE,
+                    channels=1,
+                    blocksize=FRAME_SIZE,
+                    dtype="float32",
+                    callback=self._callback,
+                ):
+                    while is_held():
+                        try:
+                            frame = self._queue.get(timeout=0.05)
+                        except Empty:
+                            continue
+                        self._recorded.append(frame)
+            except Exception as exc:
+                capture_error.append(exc)
+
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, run_capture)
+
+        if capture_error:
+            print(f"Microphone error: {capture_error[0]}", flush=True)
+            return None
+        if not self._recorded:
+            return None
+
+        audio = np.concatenate(self._recorded).astype(np.float32)
+        min_samples = int(0.2 * SAMPLE_RATE)
+        if len(audio) < min_samples:
+            print("Too short — hold Option a bit longer while speaking.", flush=True)
+            return None
+        return audio
 
     async def stream_frames(self) -> AsyncIterator[np.ndarray]:
         """Yield frames while stream is open (for barge-in)."""
