@@ -5,6 +5,7 @@ Local-first voice assistant for macOS: hold **Option** to speak, execute calenda
 ## Architecture
 
 - **Perception:** Silero VAD + faster-whisper ASR
+- **Voice out:** Inworld TTS (`inworld-tts-1`); optional macOS `say`
 - **Cognition:** Ollama (local) router/planner + LangGraph-style orchestrator
 - **Action:** EventKit calendar, Mail automation, Markdown docs
 - **UI:** Menu bar HUD (transcript, steps, Confirm/Cancel)
@@ -59,6 +60,8 @@ JARVIS_EVAL_MOCK=1 python -m jarvis.eval.run_eval
 | `OLLAMA_MODEL`         | `llama3.2:3b`            | Router model                              |
 | `JARVIS_EVAL_MOCK`     | `0`                      | Mock tools for tests                      |
 | `JARVIS_LLM_FALLBACK`  | `none`                   | Set `gemini` + `GEMINI_API_KEY` for cloud |
+| `INWORLD_API_KEY`      | (required for TTS)       | Inworld TTS API key (Basic auth)          |
+| `TTS_BACKEND`          | `inworld`                | `inworld` or `say` (macOS)                |
 | `REQUIRE_CONFIRM_SEND` | `true`                   | Block email send without HUD confirm      |
 | `SHOW_ACTIONS_VISUALLY` | `true`                  | Open Calendar/Mail/TextEdit in foreground |
 | `VISIBLE_TYPING_DELAY_MS` | `35`                  | Keystroke delay for visible typing        |

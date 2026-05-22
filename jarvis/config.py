@@ -27,7 +27,8 @@ class Settings(BaseSettings):
     vad_threshold: float = 0.5
     max_silence_sec: float = 2.0
     wake_hotkey: str = "option"  # hold to listen
-    tts_backend: Literal["say", "inworld"] = "say"
+    tts_backend: Literal["say", "inworld"] = "inworld"
+    inworld_api_key: str | None = None
 
     # Safety
     require_confirm_send: bool = True

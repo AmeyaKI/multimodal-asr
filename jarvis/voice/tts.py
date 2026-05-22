@@ -1,4 +1,4 @@
-"""TTS: macOS say() default, optional Inworld."""
+"""TTS: Inworld default, optional macOS say()."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def speak(text: str, block: bool = True) -> dict[str, Any]:
         try:
             from jarvis.voice.tts_inworld import speak_inworld
 
-            return speak_inworld(text)
+            return speak_inworld(text, api_key=settings.inworld_api_key)
         except Exception as e:
             return {"ok": False, "error": str(e)}
     try:

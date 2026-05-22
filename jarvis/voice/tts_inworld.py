@@ -12,8 +12,12 @@ import sounddevice as sd
 import soundfile as sf
 
 
-def speak_inworld(text: str, voice: str = "Ashley") -> dict[str, Any]:
-    key = os.getenv("INWORLD_API_KEY")
+def speak_inworld(
+    text: str,
+    voice: str = "Ashley",
+    api_key: str | None = None,
+) -> dict[str, Any]:
+    key = api_key or os.getenv("INWORLD_API_KEY")
     if not key:
         return {"ok": False, "error": "INWORLD_API_KEY not set"}
     url = "https://api.inworld.ai/tts/v1/voice"
